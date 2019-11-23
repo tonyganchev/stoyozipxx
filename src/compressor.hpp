@@ -14,12 +14,12 @@ public:
 	void run();
 
 private:
-	static const size_t window_cap;
+	static const size_t jam_cap;
 	static const size_t lookahead_buffer_cap;
 
 	std::ifstream is;
 	std::ofstream os;
-	std::vector<char> window;
+	std::vector<char> jam;
 	char* lookahead_buf;
 	size_t lookahead_buf_len;
 

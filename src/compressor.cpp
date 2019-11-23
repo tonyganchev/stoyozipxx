@@ -5,14 +5,14 @@
 
 using namespace std;
 
-const size_t compressor::window_cap = 10;
-const size_t compressor::lookahead_buffer_cap = 10;
+const size_t compressor::jam_cap = 10000;
+const size_t compressor::lookahead_buffer_cap = 10000;
 
 compressor::compressor(const char* in_file,
 					   const char* out_file)
 	: is{ in_file, ios::binary }
 	, os{ out_file, ios::binary }
-	, window(window_cap, 0)
+	, jam(jam_cap, 0)
 	, lookahead_buf{ new char[lookahead_buffer_cap] } {
 }
 
@@ -30,19 +30,17 @@ void compressor::run() {
 		auto lb = (char)p.second;
 		os.write(&pb, 1);
 		os.write(&lb, 1);
-		if (p.second == 0) {
-			os.write(lookahead_buf, 1);
-		}
-		slide(1);
+		os.write(lookahead_buf + lb, 1);
+		slide(lb + 1);
 	}
 }
 
 bool compressor::is_sequence_match(
-	size_t window_start_index,
+	size_t jam_start_index,
 	size_t lookahead_buffer_end_index) {
 
 	for (auto i = 0; i < lookahead_buffer_end_index; i++) {
-		if (window[i + window_start_index] != lookahead_buf[i]) {
+		if (jam[i + jam_start_index] != lookahead_buf[i]) {
 			return false;
 		}
 	}
@@ -51,13 +49,13 @@ bool compressor::is_sequence_match(
 
 int compressor::test_sequence(size_t length) {
 
-	if (length > window.size()) {
+	if (length > jam.size()) {
 		return -1;
 	}
 
-	for (auto i = 0; i <= window.size() - (int)length; i++) {
+	for (auto i = 0; i <= jam.size() - (int)length; i++) {
 		if (is_sequence_match(i, length)) {
-			return (int) window.size() - i;
+			return (int) jam.size() - i;
 		}
 	}
 	return -1;
@@ -66,14 +64,14 @@ int compressor::test_sequence(size_t length) {
 pair<size_t, size_t> compressor::find_longest_match() {
 	auto p = make_pair(0u, 0u);
 
-	if (!window.empty() && lookahead_buf_len > 0) {
-		for (auto i = 3u; i < lookahead_buf_len; i++) {
-			auto match_index = test_sequence(i);
+	if (!jam.empty() && lookahead_buf_len > 0) {
+		for (auto len = 1u; len < lookahead_buf_len; len++) {
+			auto match_index = test_sequence(len);
 			if (match_index == -1) {
 				break;
 			}
 			p.first = (size_t)match_index;
-			p.second = i;
+			p.second = len;
 		}
 	}
 
@@ -84,18 +82,18 @@ void compressor::slide(streamsize n) {
 
 	auto i = n;
 
-	if (window.size() < window_cap) {
-		auto r = window_cap - window.size();
+	if (jam.size() < jam_cap) {
+		auto r = jam_cap - jam.size();
 		i = n > r ? n - r : 0;
 	}
 
-	if (i > window.size()) {
-		i = window.size();
+	if (i > jam.size()) {
+		i = jam.size();
 	}
 
-	window.erase(window.begin(), window.begin() + i);
-	//window.resize(i + n);
-	copy(lookahead_buf, lookahead_buf + n, back_inserter(window));
+	jam.erase(jam.begin(), jam.begin() + i);
+	//jam.resize(i + n);
+	copy(lookahead_buf, lookahead_buf + n, back_inserter(jam));
 
 	copy(lookahead_buf + n, lookahead_buf + lookahead_buf_len, lookahead_buf);
 	is.read(lookahead_buf + lookahead_buf_len - n, n);
