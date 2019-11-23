@@ -6,11 +6,9 @@
 #include <vector>
 
 #include "compressor.hpp"
+#include "decompressor.hpp"
 
 using namespace std;
-
-static const size_t window_cap = 1;
-static const size_t lookahead_buffer_cap = 1;
 
 void print_usage() {
 	cout << "Usage:" << endl;
@@ -32,6 +30,8 @@ int compress(const char* in_file,
 
 int decompress(const char* in_file,
 			   const char* out_file) {
+	decompressor d { in_file, out_file };
+	d.run();
 	return 0;
 }
 

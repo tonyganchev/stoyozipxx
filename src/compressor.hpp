@@ -22,6 +22,8 @@ private:
 	std::vector<char> jam;
 	char* lookahead_buf;
 	size_t lookahead_buf_len;
+	size_t original_size;
+	size_t compression;
 
 	void slide(std::streamsize n);
 	std::pair<size_t, size_t> find_longest_match();

@@ -5,15 +5,17 @@
 
 using namespace std;
 
-const size_t compressor::jam_cap = 10000;
-const size_t compressor::lookahead_buffer_cap = 10000;
+const size_t compressor::jam_cap = 255;
+const size_t compressor::lookahead_buffer_cap = 255;
 
 compressor::compressor(const char* in_file,
 					   const char* out_file)
-	: is{ in_file, ios::binary }
-	, os{ out_file, ios::binary }
-	, jam(jam_cap, 0)
-	, lookahead_buf{ new char[lookahead_buffer_cap] } {
+		: is{ in_file, ios::binary }
+		, os{ out_file, ios::binary }
+		, jam(jam_cap, 0)
+		, lookahead_buf{ new char[lookahead_buffer_cap] }
+		, original_size(0u)
+		, compression(0u) {
 }
 
 compressor::~compressor() {
@@ -23,7 +25,7 @@ compressor::~compressor() {
 void compressor::run() {
 	is.read(lookahead_buf, lookahead_buffer_cap);
 	lookahead_buf_len = is.gcount();
-	while (lookahead_buf_len > 0 && !is.eof()) {
+	while (lookahead_buf_len > 0) {
 		auto p = find_longest_match();
 
 		auto pb = (char)p.first;
@@ -32,7 +34,13 @@ void compressor::run() {
 		os.write(&lb, 1);
 		os.write(lookahead_buf + lb, 1);
 		slide(lb + 1);
+		original_size += lb + 1;
+		compression++;
 	}
+	cout << "Compressed " << original_size
+		<< " bytes downto " << compression
+		<< " tuples and " << (compression * 3)
+		<< " bytes." << endl;
 }
 
 bool compressor::is_sequence_match(
@@ -92,9 +100,9 @@ void compressor::slide(streamsize n) {
 	}
 
 	jam.erase(jam.begin(), jam.begin() + i);
-	//jam.resize(i + n);
 	copy(lookahead_buf, lookahead_buf + n, back_inserter(jam));
 
 	copy(lookahead_buf + n, lookahead_buf + lookahead_buf_len, lookahead_buf);
 	is.read(lookahead_buf + lookahead_buf_len - n, n);
+	lookahead_buf_len -= n - is.gcount();
 }
