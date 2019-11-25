@@ -8,6 +8,7 @@ class tester {
 public:
 	tester(const char* infn);
 	int run();
+
 private:
 	const char* infn;
 	std::string tmpfn;

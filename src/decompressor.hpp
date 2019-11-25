@@ -9,16 +9,14 @@ namespace szxx {
 
 class decompressor {
 public:
-    decompressor(const char* in_file,
-                 const char* out_file);
-    ~decompressor();
-
-    void run();
+	decompressor(const char* in_file,
+	             const char* out_file);
+	~decompressor();
+	void run();
 
 private:
 	std::ifstream is;
 	std::ofstream os;
-
 };
 
 }

@@ -10,7 +10,7 @@ namespace szxx {
 class compressor {
 public:
 	compressor(const char* in_file,
-			   const char* out_file);
+	           const char* out_file);
 	~compressor();
 
 	void run();
@@ -31,7 +31,7 @@ private:
 	std::pair<size_t, size_t> find_longest_match();
 	int test_sequence(size_t length);
 	bool is_sequence_match(size_t window_start_index,
-						   size_t lookahead_buffer_end_index);
+	                       size_t lookahead_buffer_end_index);
 };
 
 }

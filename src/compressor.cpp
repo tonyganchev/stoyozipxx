@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <exception>
 
 using namespace std;
 using namespace szxx;
@@ -10,7 +11,7 @@ const size_t compressor::jam_cap = 255;
 const size_t compressor::lookahead_buffer_cap = 255;
 
 compressor::compressor(const char* in_file,
-					   const char* out_file)
+                       const char* out_file)
 		: is{ in_file, ios::binary }
 		, os{ out_file, ios::binary }
 		, jam(jam_cap, 0)
@@ -25,6 +26,10 @@ compressor::~compressor() {
 }
 
 void compressor::run() {
+	if (!is.good()) {
+		throw runtime_error("Could not open input file.");
+	}
+
 	is.read(lookahead_buf, lookahead_buffer_cap);
 	lookahead_buf_len = is.gcount();
 	while (lookahead_buf_len > 0) {
@@ -40,9 +45,9 @@ void compressor::run() {
 		compression++;
 	}
 	cout << "Compressed " << original_size
-		<< " bytes downto " << compression
-		<< " tuples and " << (compression * 3)
-		<< " bytes." << endl;
+	     << " bytes downto " << compression
+	     << " tuples and " << (compression * 3)
+	     << " bytes." << endl;
 }
 
 bool compressor::is_sequence_match(

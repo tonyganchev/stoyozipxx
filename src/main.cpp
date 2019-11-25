@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -43,8 +44,8 @@ int main(int argc,
 		const auto all_commands_count =
 				compress_count + decompress_count + test_count;
 		if (all_commands_count != 1) {
-			cerr << "A single command is expected while "
-					<< all_commands_count << " were specified." << endl;
+			cerr << "A single command is expected while ";
+			cerr << all_commands_count << " were specified." << endl;
 			cout << desc << endl;
 			return -1;
 		}
@@ -55,6 +56,10 @@ int main(int argc,
 			return -1;
 		}
 		const char* input_file = vm["input"].as<string>().c_str();
+		if (!std::filesystem::exists(std::filesystem::path(input_file))) {
+			cerr << input_file << " does not exist." << endl;
+			return -1;
+		}
 
 		if (test_count) {
 			return tester { input_file }.run();

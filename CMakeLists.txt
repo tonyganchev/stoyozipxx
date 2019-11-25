@@ -9,5 +9,8 @@ if(Boost_FOUND)
 			src/compressor.cpp
 			src/decompressor.cpp
 			src/tester.cpp)
+			set_property(TARGET stoyozipxx PROPERTY CXX_STANDARD 17)
 	target_link_libraries(stoyozipxx Boost::program_options)
+else()
+	message( FATAL_ERROR "Boost library is required." )
 endif()

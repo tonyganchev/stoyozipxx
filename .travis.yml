@@ -1,0 +1,10 @@
+language: cpp
+sudo: false
+
+jobs:
+  include:
+    - stage: fedora
+      script:
+        - cd ci
+        - docker build -t stoyozipxx_fedora .
+        - docker run --rm -P -it --name stoyozipxx stoyozipxx_fedora /src/build/stoyozipxx -t -i /src/lorem-ipsum.txt
