@@ -11,6 +11,10 @@ decompressor::decompressor(const char* in_file,
         , os{ out_file, ios::binary } {
 }
 
+decompressor::~decompressor() {
+    os.flush();    
+}
+
 void decompressor::run() {
     string back_buf = "";
     auto n = 0u;
@@ -37,6 +41,5 @@ void decompressor::run() {
 
         n++;
     }
-    os.flush();
     cout << "Decompressed " << n << " tuples." << endl;
 }

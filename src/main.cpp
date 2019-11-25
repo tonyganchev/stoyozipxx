@@ -57,8 +57,7 @@ int main(int argc,
 		const char* input_file = vm["input"].as<string>().c_str();
 
 		if (test_count) {
-			tester t(input_file);
-			return t.run();
+			return tester { input_file }.run();
 		}
 
 		if (!vm.count("output")) {
@@ -69,14 +68,12 @@ int main(int argc,
 		const char* output_file = vm["output"].as<string>().c_str();
 
 		if (compress_count) {
-			compressor c { input_file, output_file };
-			c.run();
+			compressor { input_file, output_file }.run();
 			return 0;
 		}
 		
 		if (decompress_count) {
-			decompressor d { input_file, output_file };
-			d.run();
+			decompressor { input_file, output_file }.run();
 			return 0;
 		}
 		

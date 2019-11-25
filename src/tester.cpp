@@ -14,10 +14,8 @@ tester::tester(const char* in_file)
 }
 
 int tester::run() {
-	compressor c { infn, tmpfn.c_str() };
-	c.run();
-	decompressor d { tmpfn.c_str(), outfn.c_str() };
-	d.run();
+	compressor { infn, tmpfn.c_str() }.run();
+	decompressor { tmpfn.c_str(), outfn.c_str() }.run();
 
 	ifstream origs { infn };
 	ifstream fins { outfn.c_str() };

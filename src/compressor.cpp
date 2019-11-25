@@ -21,6 +21,7 @@ compressor::compressor(const char* in_file,
 
 compressor::~compressor() {
 	delete[] lookahead_buf;
+	os.flush();
 }
 
 void compressor::run() {
@@ -38,7 +39,6 @@ void compressor::run() {
 		original_size += lb + 1;
 		compression++;
 	}
-	os.flush();
 	cout << "Compressed " << original_size
 		<< " bytes downto " << compression
 		<< " tuples and " << (compression * 3)
