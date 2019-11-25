@@ -4,6 +4,7 @@
 #include <iterator>
 
 using namespace std;
+using namespace szxx;
 
 const size_t compressor::jam_cap = 255;
 const size_t compressor::lookahead_buffer_cap = 255;
@@ -37,6 +38,7 @@ void compressor::run() {
 		original_size += lb + 1;
 		compression++;
 	}
+	os.flush();
 	cout << "Compressed " << original_size
 		<< " bytes downto " << compression
 		<< " tuples and " << (compression * 3)
@@ -48,7 +50,7 @@ bool compressor::is_sequence_match(
 	size_t lookahead_buffer_end_index) {
 
 	for (auto i = 0; i < lookahead_buffer_end_index; i++) {
-		if (jam[i + jam_start_index] != lookahead_buf[i]) {
+		if (jam[jam_start_index + i] != lookahead_buf[i]) {
 			return false;
 		}
 	}

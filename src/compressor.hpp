@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+namespace szxx {
+
 class compressor {
 public:
 	compressor(const char* in_file,
@@ -31,3 +33,5 @@ private:
 	bool is_sequence_match(size_t window_start_index,
 						   size_t lookahead_buffer_end_index);
 };
+
+}

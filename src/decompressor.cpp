@@ -3,14 +3,13 @@
 #include <string>
 
 using namespace std;
+using namespace szxx;
 
 decompressor::decompressor(const char* in_file,
                            const char* out_file)
         : is{ in_file, ios::binary }
         , os{ out_file, ios::binary } {
 }
-
-decompressor::~decompressor() { }
 
 void decompressor::run() {
     string back_buf = "";
@@ -38,5 +37,6 @@ void decompressor::run() {
 
         n++;
     }
+    os.flush();
     cout << "Decompressed " << n << " tuples." << endl;
 }

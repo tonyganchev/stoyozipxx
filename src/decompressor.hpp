@@ -5,12 +5,12 @@
 #include <utility>
 #include <vector>
 
+namespace szxx {
+
 class decompressor {
 public:
     decompressor(const char* in_file,
                  const char* out_file);
-    ~decompressor();
-
     void run();
 
 private:
@@ -18,3 +18,5 @@ private:
 	std::ofstream os;
 
 };
+
+}
