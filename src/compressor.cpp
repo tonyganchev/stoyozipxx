@@ -15,8 +15,9 @@ compressor::compressor(const char* in_file,
 		: is{ in_file, ios::binary }
 		, os{ out_file, ios::binary }
 		, jam{ jam_cap, lookahead_buffer_cap }
-		, original_size(0u)
-		, compression(0u) {
+		, original_size{ 0u }
+		, compression{ 0u }
+		, longest_chunk{ 0u } {
 	is >> noskipws;
 }
 
@@ -36,10 +37,10 @@ void compressor::run() {
 		auto p = find_longest_match();
 		//cout << (int) p.first << ' ' << (int) p.second << endl;
 
-		// if (original_size % 5000 == 0) {
-		// 	cout << "Ori: " << original_size << endl;
-		// 	cout << jam << endl;
-		// 	cout << "Mat: " << (int) p.first << "+" << (int) p.second << endl;
+		// if (original_size % 10 == 0) {
+			// cout << "Ori: " << original_size << endl;
+			// cout << jam << endl;
+			// cout << "Mat: " << (int) p.first << "+" << (int) p.second << endl;
 		// }
 
 		auto offset = (unsigned char) p.first;
@@ -51,18 +52,20 @@ void compressor::run() {
 		original_size += length + 1;
 		compression++;
 	}
-	cout << "Compressed " << original_size
-	     << " bytes downto " << compression
-	     << " tuples and " << (compression * 3)
-	     << " bytes." << endl;
+	cout << "Compressed " << original_size << " bytes "
+	     << "downto " << compression << " tuples "
+	     << "and " << (compression * 3) << " bytes. "
+	     << "Compression ratio is " << (original_size * 1.0 / compression / 3) << ". "
+		 << "Longest chunk is " << longest_chunk << " bytes."
+		 << endl;
 	assert(jam.lookahead_empty());
 }
 
 pair<int, int> compressor::find_longest_match() {
 	auto p = make_pair(0, 0);
 
-	for (auto length = 1u; length <= jam.lookback_size(); length++) {
-		bool length_match = true;
+	for (auto length = 1u; length <= min(jam.lookback_size() + 1, jam.lookahead_size()) - 1; length++) {
+		bool length_match = false;
 		for (auto it = jam.begin(); it != jam.lookahead() - length; ++it) {
 			bool match = true;
 			for (auto jt = it; jt != it + length; ++jt) {
@@ -77,9 +80,10 @@ pair<int, int> compressor::find_longest_match() {
 				break;
 			}
 		}
-		if (length_match) {
+		if (!length_match) {
 			break;
 		}
 	}
+	longest_chunk = max((int) longest_chunk, p.second);
 	return p;
 }

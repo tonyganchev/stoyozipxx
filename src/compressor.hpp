@@ -28,6 +28,7 @@ private:
 	buffer jam;
 	size_t original_size;
 	size_t compression;
+	size_t longest_chunk;
 
 	std::pair<int, int> find_longest_match();
 };
