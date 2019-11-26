@@ -18,6 +18,8 @@ using namespace boost::program_options;
 
 int main(int argc,
 		 char** argv) {
+
+	//ios_base::sync_with_stdio(false);
 	try {
 		options_description desc{ "Options" };
 		desc.add_options()
@@ -31,7 +33,6 @@ int main(int argc,
 
 		variables_map vm;
 		store(parse_command_line(argc, argv, desc), vm);
-		notify(vm);
 
 		if (vm.count("help")) {
 			cout << desc << endl;
@@ -55,8 +56,8 @@ int main(int argc,
 			cout << desc << endl; 
 			return -1;
 		}
-		const char* input_file = vm["input"].as<string>().c_str();
-		if (!std::filesystem::exists(std::filesystem::path(input_file))) {
+		auto input_file = vm["input"].as<string>().c_str();
+		if (!filesystem::exists(filesystem::path(input_file))) {
 			cerr << input_file << " does not exist." << endl;
 			return -1;
 		}
@@ -70,7 +71,7 @@ int main(int argc,
 			cout << desc << endl; 
 			return -1;
 		}
-		const char* output_file = vm["output"].as<string>().c_str();
+		auto output_file = vm["output"].as<string>().c_str();
 
 		if (compress_count) {
 			compressor { input_file, output_file }.run();
