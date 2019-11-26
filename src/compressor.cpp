@@ -14,8 +14,7 @@ compressor::compressor(const char* in_file,
                        const char* out_file)
 		: is{ in_file, ios::binary }
 		, os{ out_file, ios::binary }
-		, jam{ jam_cap }
-		, lookahead_buf{ lookahead_buffer_cap }
+		, jam{ jam_cap, lookahead_buffer_cap }
 		, original_size(0u)
 		, compression(0u) {
 	is >> noskipws;
@@ -31,17 +30,24 @@ void compressor::run() {
 	}
 
 	copy_n(istream_iterator<char>(is),
-	       lookahead_buf.capacity(),
-	       back_inserter(lookahead_buf));
-	while (!lookahead_buf.empty()) {
+	       jam.capacity(),
+	       back_inserter(jam));
+	while (!jam.lookahead_empty()) {
 		auto p = find_longest_match();
+		//cout << (int) p.first << ' ' << (int) p.second << endl;
+
+		// if (original_size % 5000 == 0) {
+		// 	cout << "Ori: " << original_size << endl;
+		// 	cout << jam << endl;
+		// 	cout << "Mat: " << (int) p.first << "+" << (int) p.second << endl;
+		// }
 
 		auto offset = (unsigned char) p.first;
 		auto length = (unsigned char) p.second;
 		os.write((const char *) &offset, 1);
 		os.write((const char *) &length, 1);
-		copy_n(lookahead_buf.begin() + length, 1, ostream_iterator<char>(os));
-		slide(length + 1);
+		copy_n(jam.lookahead() + length, 1, ostream_iterator<char>(os));
+		jam.forward(length + 1, is);
 		original_size += length + 1;
 		compression++;
 	}
@@ -49,65 +55,31 @@ void compressor::run() {
 	     << " bytes downto " << compression
 	     << " tuples and " << (compression * 3)
 	     << " bytes." << endl;
+	assert(jam.lookahead_empty());
 }
 
-bool compressor::is_sequence_match(size_t jam_start_index,
-                                   size_t lookahead_buffer_end_index) {
+pair<int, int> compressor::find_longest_match() {
+	auto p = make_pair(0, 0);
 
-	for (auto i = 0; i < lookahead_buffer_end_index; i++) {
-		if (jam[jam_start_index + i] != lookahead_buf[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
-int compressor::test_sequence(size_t length) {
-
-	if (length > jam.size()) {
-		return -1;
-	}
-
-	for (auto i = 0u; i <= jam.size() - length; i++) {
-		if (is_sequence_match(i, length)) {
-			return (int) jam.size() - i;
-		}
-	}
-	return -1;
-}
-
-pair<char, char> compressor::find_longest_match() {
-	auto p = make_pair('\0', '\0');
-
-	if (!jam.empty() && !lookahead_buf.empty()) {
-		for (auto len = 1u; len < lookahead_buf.size(); len++) {
-			auto match_index = test_sequence(len);
-			if (match_index == -1) {
+	for (auto length = 1u; length <= jam.lookback_size(); length++) {
+		bool length_match = true;
+		for (auto it = jam.begin(); it != jam.lookahead() - length; ++it) {
+			bool match = true;
+			for (auto jt = it; jt != it + length; ++jt) {
+				if (*jt != *(jam.lookahead() + (jt - it))) {
+					match = false;
+					break;
+				}
+			}
+			if (match) {
+				p = make_pair(jam.lookahead() - it, length);
+				length_match = true;
 				break;
 			}
-			p.first = (size_t)match_index;
-			p.second = len;
+		}
+		if (length_match) {
+			break;
 		}
 	}
-
 	return p;
-}
-
-template<class ReadIt, class WriteIt>
-void copy_upto_n(ReadIt begin, ReadIt end, size_t n, WriteIt dest) {
-	for (auto it = begin; it != end && n > 0; n--) {
-		*dest++ = *it;
-		if (n > 1) {
-			++it;
-		}
-	}
-}
-
-void compressor::slide(streamsize n) {
-	copy_n(lookahead_buf.begin(), n, back_inserter(jam));
-	lookahead_buf.erase_begin(n);
-	copy_upto_n(istream_iterator<char>(is),
-	            istream_iterator<char>(),
-	            n,
-	            back_inserter(lookahead_buf));
 }

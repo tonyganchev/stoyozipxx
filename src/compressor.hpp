@@ -7,6 +7,8 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include "buffer.hpp"
+
 namespace szxx {
 
 class compressor {
@@ -23,16 +25,11 @@ private:
 
 	std::ifstream is;
 	std::ofstream os;
-	boost::circular_buffer<char> jam;
-	boost::circular_buffer<char> lookahead_buf;
+	buffer jam;
 	size_t original_size;
 	size_t compression;
 
-	void slide(std::streamsize n);
-	std::pair<char, char> find_longest_match();
-	int test_sequence(size_t length);
-	bool is_sequence_match(size_t window_start_index,
-	                       size_t lookahead_buffer_end_index);
+	std::pair<int, int> find_longest_match();
 };
 
 }
