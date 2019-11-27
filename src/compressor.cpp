@@ -35,13 +35,6 @@ void compressor::run() {
 	       back_inserter(jam));
 	while (!jam.lookahead_empty()) {
 		auto p = find_longest_match();
-		//cout << (int) p.first << ' ' << (int) p.second << endl;
-
-		// if (original_size % 10 == 0) {
-			// cout << "Ori: " << original_size << endl;
-			// cout << jam << endl;
-			// cout << "Mat: " << (int) p.first << "+" << (int) p.second << endl;
-		// }
 
 		auto offset = (unsigned char) p.first;
 		auto length = (unsigned char) p.second;
@@ -63,25 +56,18 @@ void compressor::run() {
 
 pair<int, int> compressor::find_longest_match() {
 	auto p = make_pair(0, 0);
-
-	for (auto length = 1u; length <= min(jam.lookback_size() + 1, jam.lookahead_size()) - 1; length++) {
-		bool length_match = false;
-		for (auto it = jam.begin(); it != jam.lookahead() - length; ++it) {
-			bool match = true;
-			for (auto jt = it; jt != it + length; ++jt) {
-				if (*jt != *(jam.lookahead() + (jt - it))) {
-					match = false;
-					break;
+	for (auto it = jam.begin(); it != jam.lookahead(); ++it) {
+		for (auto lb_it = it, la_it = jam.lookahead();
+				lb_it != jam.lookahead() && la_it != jam.end();
+				++lb_it, ++la_it) {
+			if (*lb_it != *la_it) {
+				auto len = lb_it - it;
+				assert(0 <= len && len <= 255);
+				if (len > 0 && len > p.second) {
+					p = make_pair(jam.lookahead() - it, len);
 				}
-			}
-			if (match) {
-				p = make_pair(jam.lookahead() - it, length);
-				length_match = true;
 				break;
 			}
-		}
-		if (!length_match) {
-			break;
 		}
 	}
 	longest_chunk = max((int) longest_chunk, p.second);
