@@ -1,8 +1,9 @@
-#include "compressor.hpp"
-
 #include <algorithm>
 #include <iterator>
 #include <exception>
+
+#include "compressor.hpp"
+#include "oligorithm.hpp"
 
 using namespace std;
 using namespace szxx;
@@ -55,21 +56,11 @@ void compressor::run() {
 }
 
 pair<int, int> compressor::find_longest_match() {
-	auto p = make_pair(0, 0);
-	for (auto it = jam.begin(); it != jam.lookahead(); ++it) {
-		for (auto lb_it = it, la_it = jam.lookahead();
-				lb_it != jam.lookahead() && la_it != jam.end();
-				++lb_it, ++la_it) {
-			if (*lb_it != *la_it) {
-				auto len = lb_it - it;
-				assert(0 <= len && len <= 255);
-				if (len > 0 && len > p.second) {
-					p = make_pair(jam.lookahead() - it, len);
-				}
-				break;
-			}
-		}
+	auto m = find_longest_prefix(jam.lookahead(), jam.end() - 1,
+	                             jam.begin(), jam.lookahead());
+	if (m.first == m.second) {
+		return make_pair(0, 0);
+	} else {
+		return make_pair(jam.lookahead() - m.first, m.second - m.first);
 	}
-	longest_chunk = max((int) longest_chunk, p.second);
-	return p;
 }
